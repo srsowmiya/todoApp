@@ -42,7 +42,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>main.java.com.todo.Main</mainClass>
+                    <mainClass>com.todo.Main</mainClass>
                 </configuration>
             </plugin>
             <!-- Maven Shade Plugin for creating executable JAR -->
