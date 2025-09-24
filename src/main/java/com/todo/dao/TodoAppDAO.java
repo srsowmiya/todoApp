@@ -1,15 +1,13 @@
 package com.todo.dao;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
-
-import java.sql.Timestamp;      
-import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.todo.model.Todo;
 import com.todo.util.DataBaseConnection;
@@ -17,6 +15,10 @@ import com.todo.util.DataBaseConnection;
 public class TodoAppDAO {
     private static final String SELECT_ALL_TODOS = "SELECT * FROM todos ORDER BY created_at DESC";
     private static final String INSERT_TODO = "INSERT INTO todos (title, description, completed, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
+    private static final String DELETE_TODO = "DELETE FROM todos WHERE id = ?";
+    private static final String SELECT_TODO_BY_ID = "SELECT * FROM todos WHERE id = ?";
+    private static final String UPDATE_TODO = "UPDATE todos SET title = ?, description = ?, completed = ?, updated_at = ? WHERE id = ?";
+    
 
     //create new todo
     public int createTodo(Todo todo)  throws SQLException{
@@ -48,6 +50,50 @@ public class TodoAppDAO {
             throw e; // rethrow the exception after logging
         }
     }
+
+      public Todo getTodoById(int todoId) throws SQLException {
+        try (
+            Connection conn = DataBaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(SELECT_TODO_BY_ID)
+        ) {
+            stmt.setInt(1, todoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return getTodoRow(rs);
+                }
+            }
+        }
+        return null; // no todo found
+    }
+
+    public boolean updateTodo(Todo todo) throws SQLException {
+        try (
+            Connection conn = DataBaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(UPDATE_TODO)
+        ) {
+            stmt.setString(1, todo.getTitle());
+            stmt.setString(2, todo.getDescription());
+            stmt.setBoolean(3, todo.isCompleted());
+            stmt.setTimestamp(4, java.sql.Timestamp.valueOf(LocalDateTime.now())); // update time
+            stmt.setInt(5, todo.getId());
+
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        }
+    }
+
+    public boolean deleteTodo(int todoId) throws SQLException {
+        try (
+            Connection conn = DataBaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(DELETE_TODO)
+        ) {
+            stmt.setInt(1, todoId);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        }
+    }
+
+
 
     private Todo getTodoRow(ResultSet rs) throws SQLException{
         int id = rs.getInt("id");
